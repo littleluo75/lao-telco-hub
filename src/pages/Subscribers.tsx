@@ -1,37 +1,46 @@
 import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Phone, User, Calendar, Building2, Signal } from 'lucide-react';
-import { subscribers, enterprises, numberRanges } from '@/data/mockData';
+import { Search, Phone, User, Calendar, Building2, Signal, Loader2 } from 'lucide-react';
+import { useSubscribers } from '@/hooks/useData';
+import { useNumberRanges } from '@/hooks/useData';
 import { Subscriber } from '@/types';
 
 export default function Subscribers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResult, setSearchResult] = useState<Subscriber | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const { data: subscribers = [], isLoading } = useSubscribers();
+  const { data: numberRanges = [] } = useNumberRanges();
 
   const handleSearch = () => {
+    setIsSearching(true);
     setHasSearched(true);
+    
+    // Search in loaded subscribers
     const found = subscribers.find(
       sub =>
-        sub.msisdn.includes(searchTerm) ||
-        sub.serial_number.toLowerCase().includes(searchTerm.toLowerCase())
+        sub.msisdn?.includes(searchTerm) ||
+        sub.serial_number?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
     setSearchResult(found || null);
-  };
-
-  const getTelcoName = (telcoId: string) => {
-    const telco = enterprises.find(e => e.id === telcoId);
-    return telco?.name || '-';
+    setIsSearching(false);
   };
 
   const getRangeName = (rangeId: string) => {
     const range = numberRanges.find(r => r.id === rangeId);
     return range?.prefix || '-';
   };
+
+  // Get sample data from database
+  const sampleSubscribers = subscribers.slice(0, 3);
 
   return (
     <div className="flex flex-col">
@@ -54,15 +63,19 @@ export default function Subscribers() {
               <div className="relative flex-1 max-w-md">
                 <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Ví dụ: 02091234567 hoặc SIM-UNI-001234"
+                  placeholder="Ví dụ: 020912345678 hoặc SN-UNI-001"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="pl-9"
                   onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 />
               </div>
-              <Button onClick={handleSearch}>
-                <Search className="mr-2 h-4 w-4" />
+              <Button onClick={handleSearch} disabled={isSearching || isLoading}>
+                {isSearching ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="mr-2 h-4 w-4" />
+                )}
                 Tra cứu
               </Button>
             </div>
@@ -104,7 +117,7 @@ export default function Subscribers() {
                               Nhà mạng
                             </p>
                             <p className="font-medium">
-                              {getTelcoName(searchResult.telco_id)}
+                              {searchResult.telco?.name || '-'}
                             </p>
                           </div>
                         </div>
@@ -147,9 +160,7 @@ export default function Subscribers() {
                             </p>
                             <p className="font-medium">
                               {searchResult.activation_date
-                                ? new Date(
-                                    searchResult.activation_date
-                                  ).toLocaleDateString('vi-VN')
+                                ? new Date(searchResult.activation_date).toLocaleDateString('vi-VN')
                                 : '-'}
                             </p>
                           </div>
@@ -162,9 +173,7 @@ export default function Subscribers() {
                             </p>
                             <p className="font-medium">
                               {searchResult.last_sync_at
-                                ? new Date(
-                                    searchResult.last_sync_at
-                                  ).toLocaleDateString('vi-VN')
+                                ? new Date(searchResult.last_sync_at).toLocaleDateString('vi-VN')
                                 : '-'}
                             </p>
                           </div>
@@ -196,20 +205,26 @@ export default function Subscribers() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 text-sm md:grid-cols-3">
-              <div className="rounded-md bg-muted p-3">
-                <p className="font-medium">Unitel</p>
-                <p className="text-muted-foreground">02091234567</p>
+            {isLoading ? (
+              <div className="grid gap-2 md:grid-cols-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-[60px] rounded-md" />
+                ))}
               </div>
-              <div className="rounded-md bg-muted p-3">
-                <p className="font-medium">LTC</p>
-                <p className="text-muted-foreground">02059876543</p>
+            ) : (
+              <div className="grid gap-2 text-sm md:grid-cols-3">
+                {sampleSubscribers.length > 0 ? (
+                  sampleSubscribers.map(sub => (
+                    <div key={sub.id} className="rounded-md bg-muted p-3">
+                      <p className="font-medium">{sub.telco?.name || 'N/A'}</p>
+                      <p className="text-muted-foreground">{sub.msisdn}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground col-span-3">Chưa có dữ liệu thuê bao</p>
+                )}
               </div>
-              <div className="rounded-md bg-muted p-3">
-                <p className="font-medium">ETL</p>
-                <p className="text-muted-foreground">02075551234</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>

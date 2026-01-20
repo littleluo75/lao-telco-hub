@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { violations, enterprises, licenses } from '@/data/mockData';
+import { useViolations } from '@/hooks/useData';
 import { ComplianceViolation } from '@/types';
 
 export default function Violations() {
@@ -26,10 +27,12 @@ export default function Violations() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
 
+  const { data: violations = [], isLoading } = useViolations();
+
   const filteredViolations = violations.filter(violation => {
     const matchesSearch =
-      violation.violation_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      violation.description.toLowerCase().includes(searchTerm.toLowerCase());
+      violation.violation_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      violation.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || violation.status === statusFilter;
     const matchesSeverity =
@@ -48,18 +51,12 @@ export default function Violations() {
     {
       key: 'enterprise_id',
       header: 'Doanh nghiệp',
-      render: (v: ComplianceViolation) => {
-        const enterprise = enterprises.find(e => e.id === v.enterprise_id);
-        return enterprise?.name || '-';
-      },
+      render: (v: ComplianceViolation) => v.enterprise?.name || '-',
     },
     {
       key: 'license_id',
       header: 'Giấy phép liên quan',
-      render: (v: ComplianceViolation) => {
-        const license = licenses.find(l => l.id === v.license_id);
-        return license?.license_number || '-';
-      },
+      render: (v: ComplianceViolation) => v.license?.license_number || '-',
     },
     {
       key: 'severity',
@@ -95,6 +92,11 @@ export default function Violations() {
       ),
     },
   ];
+
+  // Calculate stats
+  const newCount = violations.filter(v => v.status === 'NEW').length;
+  const investigatingCount = violations.filter(v => v.status === 'INVESTIGATING').length;
+  const resolvedCount = violations.filter(v => v.status === 'RESOLVED').length;
 
   return (
     <div className="flex flex-col">
@@ -143,33 +145,43 @@ export default function Violations() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Tổng vi phạm</p>
-            <p className="text-2xl font-bold">{violations.length}</p>
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-[80px] rounded-lg" />
+            ))}
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Mới phát hiện</p>
-            <p className="text-2xl font-bold text-destructive">
-              {violations.filter(v => v.status === 'NEW').length}
-            </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Tổng vi phạm</p>
+              <p className="text-2xl font-bold">{violations.length}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Mới phát hiện</p>
+              <p className="text-2xl font-bold text-destructive">{newCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Đang điều tra</p>
+              <p className="text-2xl font-bold text-warning">{investigatingCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Đã xử lý</p>
+              <p className="text-2xl font-bold text-success">{resolvedCount}</p>
+            </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Đang điều tra</p>
-            <p className="text-2xl font-bold text-warning">
-              {violations.filter(v => v.status === 'INVESTIGATING').length}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Đã xử lý</p>
-            <p className="text-2xl font-bold text-success">
-              {violations.filter(v => v.status === 'RESOLVED').length}
-            </p>
-          </div>
-        </div>
+        )}
 
         {/* Table */}
-        <DataTable data={filteredViolations} columns={columns} />
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : (
+          <DataTable data={filteredViolations} columns={columns} />
+        )}
       </div>
     </div>
   );

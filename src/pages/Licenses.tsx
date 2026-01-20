@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { licenses, enterprises, licenseTypes } from '@/data/mockData';
+import { useLicenses } from '@/hooks/useData';
 import { License } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -26,12 +27,12 @@ export default function Licenses() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  const { data: licenses = [], isLoading } = useLicenses();
+
   const filteredLicenses = licenses.filter(license => {
     const matchesSearch =
-      license.license_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enterprises.find(e => e.id === license.enterprise_id)?.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      license.license_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      license.enterprise?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || license.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -49,30 +50,24 @@ export default function Licenses() {
     {
       key: 'enterprise_id',
       header: 'Doanh nghiệp',
-      render: (license: License) => {
-        const enterprise = enterprises.find(e => e.id === license.enterprise_id);
-        return enterprise?.name || '-';
-      },
+      render: (license: License) => license.enterprise?.name || '-',
     },
     {
       key: 'license_type_id',
       header: 'Loại giấy phép',
-      render: (license: License) => {
-        const type = licenseTypes.find(t => t.id === license.license_type_id);
-        return type?.name || '-';
-      },
+      render: (license: License) => license.license_type?.name || '-',
     },
     {
       key: 'issue_date',
       header: 'Ngày cấp',
       render: (license: License) =>
-        new Date(license.issue_date).toLocaleDateString('vi-VN'),
+        license.issue_date ? new Date(license.issue_date).toLocaleDateString('vi-VN') : '-',
     },
     {
       key: 'expiry_date',
       header: 'Ngày hết hạn',
       render: (license: License) =>
-        new Date(license.expiry_date).toLocaleDateString('vi-VN'),
+        license.expiry_date ? new Date(license.expiry_date).toLocaleDateString('vi-VN') : '-',
     },
     {
       key: 'status',
@@ -103,6 +98,17 @@ export default function Licenses() {
       ),
     },
   ];
+
+  // Calculate stats
+  const activeCount = licenses.filter(l => l.status === 'ACTIVE').length;
+  const expiredCount = licenses.filter(l => l.status === 'EXPIRED').length;
+  const expiringCount = licenses.filter(l => {
+    if (!l.expiry_date) return false;
+    const expiryDate = new Date(l.expiry_date);
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+    return l.status === 'ACTIVE' && expiryDate <= threeMonthsFromNow;
+  }).length;
 
   return (
     <div className="flex flex-col">
@@ -141,31 +147,43 @@ export default function Licenses() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Tổng số</p>
-            <p className="text-2xl font-bold">{licenses.length}</p>
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-[80px] rounded-lg" />
+            ))}
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Đang hoạt động</p>
-            <p className="text-2xl font-bold text-success">
-              {licenses.filter(l => l.status === 'ACTIVE').length}
-            </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Tổng số</p>
+              <p className="text-2xl font-bold">{licenses.length}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Đang hoạt động</p>
+              <p className="text-2xl font-bold text-success">{activeCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Hết hạn</p>
+              <p className="text-2xl font-bold text-destructive">{expiredCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Sắp hết hạn</p>
+              <p className="text-2xl font-bold text-warning">{expiringCount}</p>
+            </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Hết hạn</p>
-            <p className="text-2xl font-bold text-destructive">
-              {licenses.filter(l => l.status === 'EXPIRED').length}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Sắp hết hạn</p>
-            <p className="text-2xl font-bold text-warning">2</p>
-          </div>
-        </div>
+        )}
 
         {/* Table */}
-        <DataTable data={filteredLicenses} columns={columns} />
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : (
+          <DataTable data={filteredLicenses} columns={columns} />
+        )}
       </div>
     </div>
   );
