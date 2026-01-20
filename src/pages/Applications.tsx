@@ -23,15 +23,17 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Filter, Eye, Edit, MoreHorizontal, LayoutList, Kanban } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, MoreHorizontal, LayoutList, Kanban, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { applications as initialApplications, enterprises, licenseTypes } from '@/data/mockData';
-import { Application, ApplicationStatus } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useApplications, useUpdateApplicationStatus, useCreateApplication } from '@/hooks/useApplications';
+import { useEnterprises, useLicenseTypes } from '@/hooks/useEnterprises';
+import { Application, ApplicationStatus, ApplicationType } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
 type ViewMode = 'table' | 'kanban';
@@ -41,53 +43,65 @@ export default function Applications() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-  const [applicationsList, setApplicationsList] = useState<Application[]>(initialApplications);
+  
+  // Form state
+  const [selectedEnterpriseId, setSelectedEnterpriseId] = useState('');
+  const [selectedType, setSelectedType] = useState<ApplicationType | ''>('');
+  const [selectedLicenseTypeId, setSelectedLicenseTypeId] = useState('');
+  
+  // Queries
+  const { data: applications = [], isLoading: isLoadingApps } = useApplications();
+  const { data: enterprises = [], isLoading: isLoadingEnterprises } = useEnterprises();
+  const { data: licenseTypes = [], isLoading: isLoadingLicenseTypes } = useLicenseTypes();
+  
+  // Mutations
+  const updateStatusMutation = useUpdateApplicationStatus();
+  const createApplicationMutation = useCreateApplication();
 
-  const filteredApplications = applicationsList.filter(app => {
+  const filteredApplications = applications.filter(app => {
     const matchesSearch =
       app.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      enterprises.find(e => e.id === app.enterprise_id)?.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      app.enterprise?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const handleCreateApplication = () => {
-    setIsCreateOpen(false);
-    toast({
-      title: 'Thành công',
-      description: 'Hồ sơ mới đã được tạo thành công.',
+    if (!selectedEnterpriseId || !selectedType) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng điền đầy đủ thông tin bắt buộc',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const code = `HS-${new Date().getFullYear()}-${String(applications.length + 1).padStart(4, '0')}`;
+    
+    createApplicationMutation.mutate({
+      code,
+      enterprise_id: selectedEnterpriseId,
+      type: selectedType as ApplicationType,
+      status: 'DRAFT',
+      created_by: 'admin@ltra.gov.la',
+    }, {
+      onSuccess: () => {
+        setIsCreateOpen(false);
+        setSelectedEnterpriseId('');
+        setSelectedType('');
+        setSelectedLicenseTypeId('');
+      },
     });
   };
 
   const handleStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
-    setApplicationsList(prev =>
-      prev.map(app =>
-        app.id === applicationId
-          ? { 
-              ...app, 
-              status: newStatus,
-              submission_date: newStatus === 'SUBMITTED' && !app.submission_date 
-                ? new Date().toISOString() 
-                : app.submission_date
-            }
-          : app
-      )
-    );
+    const submissionDate = newStatus === 'SUBMITTED' ? new Date().toISOString() : undefined;
     
-    const statusLabels: Record<ApplicationStatus, string> = {
-      DRAFT: 'Nháp',
-      SUBMITTED: 'Đã nộp',
-      REVIEWING: 'Đang xem xét',
-      APPROVED: 'Đã duyệt',
-      REJECTED: 'Từ chối',
-    };
-    
-    toast({
-      title: 'Cập nhật trạng thái',
-      description: `Hồ sơ đã được chuyển sang trạng thái "${statusLabels[newStatus]}"`,
+    updateStatusMutation.mutate({
+      id: applicationId,
+      status: newStatus,
+      submissionDate,
     });
   };
 
@@ -110,10 +124,7 @@ export default function Applications() {
     {
       key: 'enterprise_id',
       header: 'Doanh nghiệp',
-      render: (app: Application) => {
-        const enterprise = enterprises.find(e => e.id === app.enterprise_id);
-        return enterprise?.name || '-';
-      },
+      render: (app: Application) => app.enterprise?.name || '-',
     },
     {
       key: 'type',
@@ -165,6 +176,8 @@ export default function Applications() {
       ),
     },
   ];
+
+  const isLoading = isLoadingApps || isLoadingEnterprises;
 
   return (
     <div className="flex flex-col">
@@ -233,8 +246,8 @@ export default function Applications() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="enterprise">Doanh nghiệp</Label>
-                    <Select>
+                    <Label htmlFor="enterprise">Doanh nghiệp *</Label>
+                    <Select value={selectedEnterpriseId} onValueChange={setSelectedEnterpriseId}>
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn doanh nghiệp" />
                       </SelectTrigger>
@@ -248,8 +261,8 @@ export default function Applications() {
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="type">Loại hồ sơ</Label>
-                    <Select>
+                    <Label htmlFor="type">Loại hồ sơ *</Label>
+                    <Select value={selectedType} onValueChange={(v) => setSelectedType(v as ApplicationType)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn loại hồ sơ" />
                       </SelectTrigger>
@@ -263,7 +276,7 @@ export default function Applications() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="licenseType">Loại giấy phép</Label>
-                    <Select>
+                    <Select value={selectedLicenseTypeId} onValueChange={setSelectedLicenseTypeId}>
                       <SelectTrigger>
                         <SelectValue placeholder="Chọn loại giấy phép" />
                       </SelectTrigger>
@@ -281,7 +294,15 @@ export default function Applications() {
                   <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Hủy
                   </Button>
-                  <Button onClick={handleCreateApplication}>Tạo hồ sơ</Button>
+                  <Button 
+                    onClick={handleCreateApplication}
+                    disabled={createApplicationMutation.isPending}
+                  >
+                    {createApplicationMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Tạo hồ sơ
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -289,11 +310,19 @@ export default function Applications() {
         </div>
 
         {/* Content based on view mode */}
-        {viewMode === 'table' ? (
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-[500px] w-[300px] rounded-xl" />
+              ))}
+            </div>
+          </div>
+        ) : viewMode === 'table' ? (
           <DataTable data={filteredApplications} columns={columns} />
         ) : (
           <KanbanBoard
-            applications={statusFilter === 'all' ? applicationsList : filteredApplications}
+            applications={statusFilter === 'all' ? applications : filteredApplications}
             enterprises={enterprises}
             onStatusChange={handleStatusChange}
             onView={handleViewApplication}
