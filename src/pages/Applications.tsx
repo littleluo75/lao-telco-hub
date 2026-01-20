@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { KanbanBoard } from '@/components/kanban/KanbanBoard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,23 +22,28 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, Filter, Eye, Edit, MoreHorizontal } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Search, Filter, Eye, Edit, MoreHorizontal, LayoutList, Kanban } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { applications, enterprises, licenseTypes } from '@/data/mockData';
-import { Application } from '@/types';
+import { applications as initialApplications, enterprises, licenseTypes } from '@/data/mockData';
+import { Application, ApplicationStatus } from '@/types';
 import { toast } from '@/hooks/use-toast';
+
+type ViewMode = 'table' | 'kanban';
 
 export default function Applications() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [applicationsList, setApplicationsList] = useState<Application[]>(initialApplications);
 
-  const filteredApplications = applications.filter(app => {
+  const filteredApplications = applicationsList.filter(app => {
     const matchesSearch =
       app.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       enterprises.find(e => e.id === app.enterprise_id)?.name
@@ -53,6 +59,49 @@ export default function Applications() {
     toast({
       title: 'Thành công',
       description: 'Hồ sơ mới đã được tạo thành công.',
+    });
+  };
+
+  const handleStatusChange = (applicationId: string, newStatus: ApplicationStatus) => {
+    setApplicationsList(prev =>
+      prev.map(app =>
+        app.id === applicationId
+          ? { 
+              ...app, 
+              status: newStatus,
+              submission_date: newStatus === 'SUBMITTED' && !app.submission_date 
+                ? new Date().toISOString() 
+                : app.submission_date
+            }
+          : app
+      )
+    );
+    
+    const statusLabels: Record<ApplicationStatus, string> = {
+      DRAFT: 'Nháp',
+      SUBMITTED: 'Đã nộp',
+      REVIEWING: 'Đang xem xét',
+      APPROVED: 'Đã duyệt',
+      REJECTED: 'Từ chối',
+    };
+    
+    toast({
+      title: 'Cập nhật trạng thái',
+      description: `Hồ sơ đã được chuyển sang trạng thái "${statusLabels[newStatus]}"`,
+    });
+  };
+
+  const handleViewApplication = (app: Application) => {
+    toast({
+      title: 'Xem chi tiết',
+      description: `Đang mở chi tiết hồ sơ ${app.code}`,
+    });
+  };
+
+  const handleEditApplication = (app: Application) => {
+    toast({
+      title: 'Chỉnh sửa',
+      description: `Đang mở form chỉnh sửa hồ sơ ${app.code}`,
     });
   };
 
@@ -103,11 +152,11 @@ export default function Applications() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleViewApplication(app)}>
               <Eye className="mr-2 h-4 w-4" />
               Xem chi tiết
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleEditApplication(app)}>
               <Edit className="mr-2 h-4 w-4" />
               Chỉnh sửa
             </DropdownMenuItem>
@@ -153,78 +202,104 @@ export default function Applications() {
             </Select>
           </div>
 
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo hồ sơ mới
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Tạo hồ sơ mới</DialogTitle>
-                <DialogDescription>
-                  Tạo hồ sơ đề nghị cấp phép mới cho doanh nghiệp
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="enterprise">Doanh nghiệp</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn doanh nghiệp" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {enterprises.map(enterprise => (
-                        <SelectItem key={enterprise.id} value={enterprise.id}>
-                          {enterprise.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="type">Loại hồ sơ</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn loại hồ sơ" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NEW">Cấp mới</SelectItem>
-                      <SelectItem value="RENEW">Gia hạn</SelectItem>
-                      <SelectItem value="ADJUST">Điều chỉnh</SelectItem>
-                      <SelectItem value="REVOKE">Thu hồi</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="licenseType">Loại giấy phép</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn loại giấy phép" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {licenseTypes.map(type => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                  Hủy
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <TabsList className="h-9">
+                <TabsTrigger value="table" className="px-3">
+                  <LayoutList className="h-4 w-4 mr-1.5" />
+                  Bảng
+                </TabsTrigger>
+                <TabsTrigger value="kanban" className="px-3">
+                  <Kanban className="h-4 w-4 mr-1.5" />
+                  Kanban
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tạo hồ sơ mới
                 </Button>
-                <Button onClick={handleCreateApplication}>Tạo hồ sơ</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Tạo hồ sơ mới</DialogTitle>
+                  <DialogDescription>
+                    Tạo hồ sơ đề nghị cấp phép mới cho doanh nghiệp
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="enterprise">Doanh nghiệp</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn doanh nghiệp" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {enterprises.map(enterprise => (
+                          <SelectItem key={enterprise.id} value={enterprise.id}>
+                            {enterprise.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="type">Loại hồ sơ</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại hồ sơ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NEW">Cấp mới</SelectItem>
+                        <SelectItem value="RENEW">Gia hạn</SelectItem>
+                        <SelectItem value="ADJUST">Điều chỉnh</SelectItem>
+                        <SelectItem value="REVOKE">Thu hồi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="licenseType">Loại giấy phép</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại giấy phép" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {licenseTypes.map(type => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleCreateApplication}>Tạo hồ sơ</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        {/* Table */}
-        <DataTable data={filteredApplications} columns={columns} />
+        {/* Content based on view mode */}
+        {viewMode === 'table' ? (
+          <DataTable data={filteredApplications} columns={columns} />
+        ) : (
+          <KanbanBoard
+            applications={statusFilter === 'all' ? applicationsList : filteredApplications}
+            enterprises={enterprises}
+            onStatusChange={handleStatusChange}
+            onView={handleViewApplication}
+            onEdit={handleEditApplication}
+          />
+        )}
       </div>
     </div>
   );
