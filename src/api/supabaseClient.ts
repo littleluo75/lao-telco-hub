@@ -258,7 +258,37 @@ export async function getSubscribers(): Promise<Subscriber[]> {
   })) as Subscriber[];
 }
 
+/**
+ * Sanitize user input for ILIKE patterns to prevent SQL pattern injection
+ * Escapes special LIKE characters: %, _, \
+ */
+function sanitizeLikePattern(input: string): string {
+  return input
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/%/g, '\\%')     // Escape percent
+    .replace(/_/g, '\\_');    // Escape underscore
+}
+
+/**
+ * Validate search query input
+ * Returns true if valid, false otherwise
+ */
+function isValidSearchQuery(query: string): boolean {
+  // Allow alphanumeric, spaces, hyphens, and basic punctuation
+  // Limit length to prevent abuse
+  if (!query || query.length > 50) return false;
+  return /^[a-zA-Z0-9\-_.\s]+$/.test(query);
+}
+
 export async function searchSubscribers(query: string): Promise<Subscriber[]> {
+  // Validate input
+  if (!isValidSearchQuery(query)) {
+    return []; // Return empty array for invalid queries instead of throwing
+  }
+  
+  // Sanitize the query for ILIKE pattern matching
+  const sanitized = sanitizeLikePattern(query);
+  
   const { data, error } = await supabase
     .from('subscribers')
     .select(`
@@ -266,7 +296,7 @@ export async function searchSubscribers(query: string): Promise<Subscriber[]> {
       telco:enterprises(*),
       range:number_ranges(*)
     `)
-    .or(`msisdn.ilike.%${query}%,serial_number.ilike.%${query}%`)
+    .or(`msisdn.ilike.%${sanitized}%,serial_number.ilike.%${sanitized}%`)
     .limit(50);
   
   if (error) throw error;
