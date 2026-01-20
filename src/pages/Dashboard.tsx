@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { StatsCard } from '@/components/common/StatsCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { DataTable } from '@/components/common/DataTable';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText,
   Database,
@@ -13,14 +14,10 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  dashboardStats,
-  applications,
-  violations,
-  licensesPerMonth,
-  marketShareData,
-  enterprises,
-} from '@/data/mockData';
+import { useDashboardStats, useLicenses, useViolations } from '@/hooks/useData';
+import { useApplications } from '@/hooks/useApplications';
+import { useEnterprises } from '@/hooks/useEnterprises';
+import { useNumberRanges } from '@/hooks/useData';
 import {
   BarChart,
   Bar,
@@ -35,32 +32,84 @@ import {
   Legend,
 } from 'recharts';
 import { Link } from 'react-router-dom';
+import { Application, ComplianceViolation } from '@/types';
+
+// Static chart data (would come from aggregated queries in production)
+const licensesPerMonth = [
+  { name: 'T1', value: 4 },
+  { name: 'T2', value: 3 },
+  { name: 'T3', value: 5 },
+  { name: 'T4', value: 2 },
+  { name: 'T5', value: 6 },
+  { name: 'T6', value: 4 },
+  { name: 'T7', value: 7 },
+  { name: 'T8', value: 5 },
+  { name: 'T9', value: 3 },
+  { name: 'T10', value: 4 },
+  { name: 'T11', value: 6 },
+  { name: 'T12', value: 8 },
+];
 
 export default function Dashboard() {
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: applications = [], isLoading: isLoadingApps } = useApplications();
+  const { data: violations = [], isLoading: isLoadingViolations } = useViolations();
+  const { data: enterprises = [] } = useEnterprises();
+  const { data: numberRanges = [] } = useNumberRanges();
+
   const recentApplications = applications.slice(0, 4);
   const recentViolations = violations.slice(0, 3);
+
+  // Calculate market share from number ranges
+  const marketShareData = enterprises
+    .filter(e => numberRanges.some(nr => nr.telco_id === e.id))
+    .map((enterprise, index) => {
+      const telcoRanges = numberRanges.filter(nr => nr.telco_id === enterprise.id);
+      const totalBlocks = telcoRanges.reduce((sum, nr) => sum + (nr.block_size || 0), 0);
+      const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+      return {
+        name: enterprise.name.split(' ')[0],
+        value: totalBlocks,
+        color: colors[index % colors.length],
+      };
+    })
+    .filter(item => item.value > 0);
+
+  // Calculate percentages for market share
+  const totalMarketShare = marketShareData.reduce((sum, item) => sum + item.value, 0);
+  const marketSharePercent = marketShareData.map(item => ({
+    ...item,
+    value: totalMarketShare > 0 ? Math.round((item.value / totalMarketShare) * 100) : 0,
+  }));
 
   const applicationColumns = [
     { key: 'code', header: 'Mã hồ sơ' },
     {
       key: 'enterprise_id',
       header: 'Doanh nghiệp',
-      render: (app: typeof applications[0]) => {
-        const enterprise = enterprises.find(e => e.id === app.enterprise_id);
-        return enterprise?.name || '-';
-      },
+      render: (app: Application) => app.enterprise?.name || '-',
     },
-    { key: 'type', header: 'Loại', render: (app: typeof applications[0]) => (
-      <span className="text-sm">{app.type}</span>
-    )},
+    { 
+      key: 'type', 
+      header: 'Loại', 
+      render: (app: Application) => {
+        const typeLabels: Record<string, string> = {
+          NEW: 'Cấp mới',
+          RENEW: 'Gia hạn',
+          ADJUST: 'Điều chỉnh',
+          REVOKE: 'Thu hồi',
+        };
+        return <span className="text-sm">{typeLabels[app.type] || app.type}</span>;
+      }
+    },
     {
       key: 'status',
       header: 'Trạng thái',
-      render: (app: typeof applications[0]) => (
-        <StatusBadge status={app.status} />
-      ),
+      render: (app: Application) => <StatusBadge status={app.status} />,
     },
   ];
+
+  const isLoading = isLoadingStats || isLoadingApps || isLoadingViolations;
 
   return (
     <div className="flex flex-col">
@@ -72,31 +121,41 @@ export default function Dashboard() {
       <div className="flex-1 space-y-6 p-6">
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Giấy phép hoạt động"
-            value={dashboardStats.totalActiveLicenses}
-            icon={FileText}
-            variant="primary"
-            trend={{ value: 12, isPositive: true }}
-          />
-          <StatsCard
-            title="Dải số đã cấp"
-            value={dashboardStats.totalNumberRanges}
-            icon={Database}
-            variant="success"
-          />
-          <StatsCard
-            title="Hồ sơ chờ xử lý"
-            value={dashboardStats.pendingApplications}
-            icon={ClipboardList}
-            variant="warning"
-          />
-          <StatsCard
-            title="Vi phạm mới"
-            value={dashboardStats.newViolations}
-            icon={AlertTriangle}
-            variant="danger"
-          />
+          {isLoadingStats ? (
+            <>
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} className="h-[120px] rounded-lg" />
+              ))}
+            </>
+          ) : (
+            <>
+              <StatsCard
+                title="Giấy phép hoạt động"
+                value={stats?.totalActiveLicenses || 0}
+                icon={FileText}
+                variant="primary"
+                trend={{ value: 12, isPositive: true }}
+              />
+              <StatsCard
+                title="Dải số đã cấp"
+                value={stats?.totalNumberRanges || 0}
+                icon={Database}
+                variant="success"
+              />
+              <StatsCard
+                title="Hồ sơ chờ xử lý"
+                value={stats?.pendingApplications || 0}
+                icon={ClipboardList}
+                variant="warning"
+              />
+              <StatsCard
+                title="Vi phạm mới"
+                value={stats?.newViolations || 0}
+                icon={AlertTriangle}
+                variant="danger"
+              />
+            </>
+          )}
         </div>
 
         {/* Charts */}
@@ -154,7 +213,7 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={marketShareData}
+                      data={marketSharePercent}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -164,7 +223,7 @@ export default function Dashboard() {
                       label={({ name, value }) => `${name}: ${value}%`}
                       labelLine={false}
                     >
-                      {marketShareData.map((entry, index) => (
+                      {marketSharePercent.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -199,7 +258,15 @@ export default function Dashboard() {
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <DataTable data={recentApplications} columns={applicationColumns} />
+              {isLoadingApps ? (
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <DataTable data={recentApplications} columns={applicationColumns} />
+              )}
             </CardContent>
           </Card>
 
@@ -217,12 +284,15 @@ export default function Dashboard() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentViolations.map(violation => {
-                  const enterprise = enterprises.find(
-                    e => e.id === violation.enterprise_id
-                  );
-                  return (
+              {isLoadingViolations ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentViolations.map((violation: ComplianceViolation) => (
                     <div
                       key={violation.id}
                       className="flex items-start justify-between rounded-lg border p-4"
@@ -230,12 +300,10 @@ export default function Dashboard() {
                       <div className="space-y-1">
                         <p className="font-medium">{violation.violation_type}</p>
                         <p className="text-sm text-muted-foreground">
-                          {enterprise?.name}
+                          {violation.enterprise?.name || '-'}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(violation.detection_date).toLocaleDateString(
-                            'vi-VN'
-                          )}
+                          {new Date(violation.detection_date).toLocaleDateString('vi-VN')}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
@@ -243,9 +311,9 @@ export default function Dashboard() {
                         <StatusBadge status={violation.status} />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

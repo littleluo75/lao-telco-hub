@@ -3,6 +3,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { DataTable } from '@/components/common/DataTable';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { UsageBar } from '@/components/common/UsageBar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,7 +31,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { numberRanges, enterprises, licenses } from '@/data/mockData';
+import { useNumberRanges, useLicenses } from '@/hooks/useData';
+import { useEnterprises } from '@/hooks/useEnterprises';
 import { NumberRange } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
@@ -39,12 +41,14 @@ export default function NumberRanges() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isAllocateOpen, setIsAllocateOpen] = useState(false);
 
+  const { data: numberRanges = [], isLoading } = useNumberRanges();
+  const { data: enterprises = [] } = useEnterprises();
+  const { data: licenses = [] } = useLicenses();
+
   const filteredRanges = numberRanges.filter(range => {
     const matchesSearch =
-      range.prefix.includes(searchTerm) ||
-      enterprises.find(e => e.id === range.telco_id)?.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      range.prefix?.includes(searchTerm) ||
+      range.telco?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' || range.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -75,10 +79,7 @@ export default function NumberRanges() {
     {
       key: 'telco_id',
       header: 'Nhà mạng',
-      render: (range: NumberRange) => {
-        const telco = enterprises.find(e => e.id === range.telco_id);
-        return telco?.name || '-';
-      },
+      render: (range: NumberRange) => range.telco?.name || '-',
     },
     {
       key: 'usage',
@@ -123,6 +124,14 @@ export default function NumberRanges() {
       ),
     },
   ];
+
+  // Calculate stats
+  const inUseCount = numberRanges.filter(r => r.status === 'IN_USE').length;
+  const availableCount = numberRanges.filter(r => r.status === 'AVAILABLE').length;
+  const totalSubscribers = numberRanges.reduce(
+    (acc, r) => acc + (r.block_size * (r.usage_percent || 0)) / 100,
+    0
+  );
 
   return (
     <div className="flex flex-col">
@@ -233,35 +242,45 @@ export default function NumberRanges() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Tổng dải số</p>
-            <p className="text-2xl font-bold">{numberRanges.length}</p>
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="h-[80px] rounded-lg" />
+            ))}
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Đang sử dụng</p>
-            <p className="text-2xl font-bold text-success">
-              {numberRanges.filter(r => r.status === 'IN_USE').length}
-            </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-4">
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Tổng dải số</p>
+              <p className="text-2xl font-bold">{numberRanges.length}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Đang sử dụng</p>
+              <p className="text-2xl font-bold text-success">{inUseCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Có sẵn</p>
+              <p className="text-2xl font-bold text-info">{availableCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm text-muted-foreground">Tổng số thuê bao</p>
+              <p className="text-2xl font-bold">
+                {new Intl.NumberFormat('vi-VN').format(Math.round(totalSubscribers))}
+              </p>
+            </div>
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Có sẵn</p>
-            <p className="text-2xl font-bold text-info">
-              {numberRanges.filter(r => r.status === 'AVAILABLE').length}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">Tổng số thuê bao</p>
-            <p className="text-2xl font-bold">
-              {new Intl.NumberFormat('vi-VN').format(
-                numberRanges.reduce((acc, r) => acc + (r.block_size * (r.usage_percent || 0)) / 100, 0)
-              )}
-            </p>
-          </div>
-        </div>
+        )}
 
         {/* Table */}
-        <DataTable data={filteredRanges} columns={columns} />
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : (
+          <DataTable data={filteredRanges} columns={columns} />
+        )}
       </div>
     </div>
   );
