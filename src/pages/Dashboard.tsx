@@ -14,10 +14,13 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useDashboardStats, useLicenses, useViolations } from '@/hooks/useData';
-import { useApplications } from '@/hooks/useApplications';
-import { useEnterprises } from '@/hooks/useEnterprises';
-import { useNumberRanges } from '@/hooks/useData';
+import { 
+  useDashboardStats, 
+  useViolations, 
+  useApplications, 
+  useEnterprises, 
+  useNumberRanges 
+} from '@/hooks/useData';
 import {
   BarChart,
   Bar,

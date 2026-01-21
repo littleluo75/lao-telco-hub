@@ -31,8 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useNumberRanges, useLicenses } from '@/hooks/useData';
-import { useEnterprises } from '@/hooks/useEnterprises';
+import { useNumberRanges, useLicenses, useEnterprises } from '@/hooks/useData';
 import { NumberRange } from '@/types';
 import { toast } from '@/hooks/use-toast';
 

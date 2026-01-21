@@ -31,8 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useApplications, useUpdateApplicationStatus, useCreateApplication } from '@/hooks/useApplications';
-import { useEnterprises, useLicenseTypes } from '@/hooks/useEnterprises';
+import { useApplications, useUpdateApplicationStatus, useCreateApplication, useEnterprises, useLicenseTypes } from '@/hooks/useData';
 import { Application, ApplicationStatus, ApplicationType } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
