@@ -1,0 +1,117 @@
+{
+  "common": {
+    "search": "Search",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "noData": "No data",
+    "actions": "Actions",
+    "status": "Status",
+    "all": "All",
+    "viewDetails": "View Details",
+    "export": "Export",
+    "import": "Import",
+    "filter": "Filter",
+    "reset": "Reset"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "licenseManagement": "License Management",
+    "applications": "Applications",
+    "licenses": "Licenses",
+    "resourceManagement": "Resource Management",
+    "numberRanges": "Number Ranges",
+    "subscribers": "Subscriber Lookup",
+    "compliance": "Compliance",
+    "violations": "Violations",
+    "uploadData": "Upload Data",
+    "masterData": "Master Data",
+    "enterprises": "Enterprises",
+    "licenseTypes": "License Types",
+    "serviceTypes": "Service Types",
+    "system": "System",
+    "users": "Users",
+    "auditLogs": "Audit Logs"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Telecom License Management System Overview",
+    "activeLicenses": "Active Licenses",
+    "pendingApplications": "Pending Applications",
+    "totalEnterprises": "Enterprises",
+    "violations": "New Violations",
+    "licensesPerMonth": "Licenses Issued by Month",
+    "marketShare": "Number Resource Market Share",
+    "recentApplications": "Recent Applications",
+    "recentViolations": "Recent Violations"
+  },
+  "applications": {
+    "title": "Applications",
+    "description": "Manage license application requests",
+    "code": "Application Code",
+    "enterprise": "Enterprise",
+    "type": "Type",
+    "submissionDate": "Submission Date",
+    "createNew": "Create Application"
+  },
+  "licenses": {
+    "title": "Licenses",
+    "description": "Manage telecom licenses",
+    "licenseNumber": "License Number",
+    "licenseType": "License Type",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "generatePdf": "Generate PDF"
+  },
+  "numberRanges": {
+    "title": "Number Ranges",
+    "description": "Manage telecom number resource allocation",
+    "prefix": "Prefix",
+    "range": "Range",
+    "blockSize": "Block Size",
+    "telco": "Telco",
+    "usage": "Usage Rate",
+    "allocate": "Allocate Number Range"
+  },
+  "subscribers": {
+    "title": "Subscriber Lookup",
+    "description": "Look up subscriber information by phone number or SIM serial",
+    "msisdn": "Phone Number",
+    "serial": "SIM Serial",
+    "activationDate": "Activation Date",
+    "subType": "Subscriber Type"
+  },
+  "violations": {
+    "title": "Violations",
+    "description": "Manage compliance violations",
+    "detectionDate": "Detection Date",
+    "violationType": "Violation Type",
+    "severity": "Severity",
+    "resolve": "Mark as Resolved"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "expired": "Expired",
+    "expiring": "Expiring Soon",
+    "draft": "Draft",
+    "investigating": "Investigating",
+    "resolved": "Resolved",
+    "new": "New",
+    "inUse": "In Use",
+    "available": "Available"
+  },
+  "severity": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  }
+}

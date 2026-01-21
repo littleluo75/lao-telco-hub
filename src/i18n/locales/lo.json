@@ -1,0 +1,117 @@
+{
+  "common": {
+    "search": "ຄົ້ນຫາ",
+    "create": "ສ້າງໃໝ່",
+    "edit": "ແກ້ໄຂ",
+    "delete": "ລຶບ",
+    "save": "ບັນທຶກ",
+    "cancel": "ຍົກເລີກ",
+    "confirm": "ຢືນຢັນ",
+    "loading": "ກຳລັງໂຫລດ...",
+    "noData": "ບໍ່ມີຂໍ້ມູນ",
+    "actions": "ການກະທຳ",
+    "status": "ສະຖານະ",
+    "all": "ທັງໝົດ",
+    "viewDetails": "ເບິ່ງລາຍລະອຽດ",
+    "export": "ສົ່ງອອກ",
+    "import": "ນຳເຂົ້າ",
+    "filter": "ກັ່ນຕອງ",
+    "reset": "ຕັ້ງຄ່າໃໝ່"
+  },
+  "menu": {
+    "dashboard": "ໜ້າຫຼັກ",
+    "licenseManagement": "ການຄຸ້ມຄອງໃບອະນຸຍາດ",
+    "applications": "ຄຳຮ້ອງ",
+    "licenses": "ໃບອະນຸຍາດ",
+    "resourceManagement": "ການຄຸ້ມຄອງຊັບພະຍາກອນ",
+    "numberRanges": "ຊ່ວງເລກໝາຍ",
+    "subscribers": "ຄົ້ນຫາຜູ້ໃຊ້ບໍລິການ",
+    "compliance": "ການປະຕິບັດຕາມ",
+    "violations": "ການລະເມີດ",
+    "uploadData": "ອັບໂຫລດຂໍ້ມູນ",
+    "masterData": "ຂໍ້ມູນຫຼັກ",
+    "enterprises": "ວິສາຫະກິດ",
+    "licenseTypes": "ປະເພດໃບອະນຸຍາດ",
+    "serviceTypes": "ປະເພດບໍລິການ",
+    "system": "ລະບົບ",
+    "users": "ຜູ້ໃຊ້",
+    "auditLogs": "ບັນທຶກລະບົບ"
+  },
+  "dashboard": {
+    "title": "ໜ້າຫຼັກ",
+    "description": "ພາບລວມລະບົບຄຸ້ມຄອງໃບອະນຸຍາດໂທລະຄົມ",
+    "activeLicenses": "ໃບອະນຸຍາດທີ່ມີຜົນບັງຄັບໃຊ້",
+    "pendingApplications": "ຄຳຮ້ອງລໍຖ້າ",
+    "totalEnterprises": "ວິສາຫະກິດ",
+    "violations": "ການລະເມີດໃໝ່",
+    "licensesPerMonth": "ໃບອະນຸຍາດອອກຕາມເດືອນ",
+    "marketShare": "ສ່ວນແບ່ງຕະຫຼາດຊັບພະຍາກອນເລກໝາຍ",
+    "recentApplications": "ຄຳຮ້ອງຫຼ້າສຸດ",
+    "recentViolations": "ການລະເມີດຫຼ້າສຸດ"
+  },
+  "applications": {
+    "title": "ຄຳຮ້ອງ",
+    "description": "ຄຸ້ມຄອງຄຳຮ້ອງຂໍໃບອະນຸຍາດ",
+    "code": "ລະຫັດຄຳຮ້ອງ",
+    "enterprise": "ວິສາຫະກິດ",
+    "type": "ປະເພດ",
+    "submissionDate": "ວັນທີຍື່ນ",
+    "createNew": "ສ້າງຄຳຮ້ອງ"
+  },
+  "licenses": {
+    "title": "ໃບອະນຸຍາດ",
+    "description": "ຄຸ້ມຄອງໃບອະນຸຍາດໂທລະຄົມ",
+    "licenseNumber": "ເລກທີໃບອະນຸຍາດ",
+    "licenseType": "ປະເພດໃບອະນຸຍາດ",
+    "issueDate": "ວັນທີອອກ",
+    "expiryDate": "ວັນທີໝົດອາຍຸ",
+    "generatePdf": "ສ້າງ PDF"
+  },
+  "numberRanges": {
+    "title": "ຊ່ວງເລກໝາຍ",
+    "description": "ຄຸ້ມຄອງການຈັດສັນຊັບພະຍາກອນເລກໝາຍໂທລະຄົມ",
+    "prefix": "ເລກນຳໜ້າ",
+    "range": "ຊ່ວງ",
+    "blockSize": "ຂະໜາດບັອກ",
+    "telco": "ບໍລິສັດໂທລະຄົມ",
+    "usage": "ອັດຕາການໃຊ້ງານ",
+    "allocate": "ຈັດສັນຊ່ວງເລກໝາຍ"
+  },
+  "subscribers": {
+    "title": "ຄົ້ນຫາຜູ້ໃຊ້ບໍລິການ",
+    "description": "ຄົ້ນຫາຂໍ້ມູນຜູ້ໃຊ້ບໍລິການຕາມເບີໂທ ຫຼື Serial SIM",
+    "msisdn": "ເບີໂທລະສັບ",
+    "serial": "Serial SIM",
+    "activationDate": "ວັນທີເປີດໃຊ້",
+    "subType": "ປະເພດຜູ້ໃຊ້"
+  },
+  "violations": {
+    "title": "ການລະເມີດ",
+    "description": "ຄຸ້ມຄອງການລະເມີດ ແລະ ການດຳເນີນການ",
+    "detectionDate": "ວັນທີກວດພົບ",
+    "violationType": "ປະເພດການລະເມີດ",
+    "severity": "ຄວາມຮຸນແຮງ",
+    "resolve": "ໝາຍວ່າແກ້ໄຂແລ້ວ"
+  },
+  "status": {
+    "active": "ມີຜົນບັງຄັບໃຊ້",
+    "inactive": "ບໍ່ມີຜົນບັງຄັບໃຊ້",
+    "pending": "ລໍຖ້າ",
+    "approved": "ອະນຸມັດແລ້ວ",
+    "rejected": "ປະຕິເສດ",
+    "expired": "ໝົດອາຍຸ",
+    "expiring": "ໃກ້ຈະໝົດອາຍຸ",
+    "draft": "ຮ່າງ",
+    "investigating": "ກຳລັງສືບສວນ",
+    "resolved": "ແກ້ໄຂແລ້ວ",
+    "new": "ໃໝ່",
+    "inUse": "ກຳລັງໃຊ້ງານ",
+    "available": "ວ່າງ"
+  },
+  "severity": {
+    "low": "ຕ່ຳ",
+    "medium": "ປານກາງ",
+    "high": "ສູງ",
+    "critical": "ຮ້າຍແຮງ"
+  }
+}

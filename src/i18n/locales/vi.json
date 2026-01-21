@@ -1,0 +1,117 @@
+{
+  "common": {
+    "search": "Tìm kiếm",
+    "create": "Tạo mới",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "loading": "Đang tải...",
+    "noData": "Không có dữ liệu",
+    "actions": "Thao tác",
+    "status": "Trạng thái",
+    "all": "Tất cả",
+    "viewDetails": "Xem chi tiết",
+    "export": "Xuất file",
+    "import": "Nhập file",
+    "filter": "Lọc",
+    "reset": "Đặt lại"
+  },
+  "menu": {
+    "dashboard": "Bảng điều khiển",
+    "licenseManagement": "Quản lý Giấy phép",
+    "applications": "Hồ sơ đề nghị",
+    "licenses": "Giấy phép",
+    "resourceManagement": "Quản lý Kho số",
+    "numberRanges": "Dải số",
+    "subscribers": "Tra cứu thuê bao",
+    "compliance": "Tuân thủ",
+    "violations": "Vi phạm",
+    "uploadData": "Upload dữ liệu",
+    "masterData": "Danh mục",
+    "enterprises": "Doanh nghiệp",
+    "licenseTypes": "Loại giấy phép",
+    "serviceTypes": "Loại dịch vụ",
+    "system": "Hệ thống",
+    "users": "Người dùng",
+    "auditLogs": "Nhật ký hệ thống"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "description": "Tổng quan hệ thống quản lý giấy phép viễn thông",
+    "activeLicenses": "Giấy phép hiệu lực",
+    "pendingApplications": "Hồ sơ chờ xử lý",
+    "totalEnterprises": "Doanh nghiệp",
+    "violations": "Vi phạm mới",
+    "licensesPerMonth": "Giấy phép cấp theo tháng",
+    "marketShare": "Thị phần kho số",
+    "recentApplications": "Hồ sơ gần đây",
+    "recentViolations": "Vi phạm gần đây"
+  },
+  "applications": {
+    "title": "Hồ sơ đề nghị",
+    "description": "Quản lý hồ sơ đề nghị cấp/gia hạn/sửa đổi giấy phép",
+    "code": "Mã hồ sơ",
+    "enterprise": "Doanh nghiệp",
+    "type": "Loại hồ sơ",
+    "submissionDate": "Ngày nộp",
+    "createNew": "Tạo hồ sơ mới"
+  },
+  "licenses": {
+    "title": "Giấy phép",
+    "description": "Quản lý giấy phép viễn thông",
+    "licenseNumber": "Số giấy phép",
+    "licenseType": "Loại giấy phép",
+    "issueDate": "Ngày cấp",
+    "expiryDate": "Ngày hết hạn",
+    "generatePdf": "Tạo PDF"
+  },
+  "numberRanges": {
+    "title": "Dải số",
+    "description": "Quản lý phân bổ dải số viễn thông",
+    "prefix": "Đầu số",
+    "range": "Phạm vi",
+    "blockSize": "Số lượng",
+    "telco": "Nhà mạng",
+    "usage": "Tỷ lệ sử dụng",
+    "allocate": "Phân bổ dải số"
+  },
+  "subscribers": {
+    "title": "Tra cứu thuê bao",
+    "description": "Tra cứu thông tin thuê bao theo số điện thoại hoặc SIM serial",
+    "msisdn": "Số điện thoại",
+    "serial": "Serial SIM",
+    "activationDate": "Ngày kích hoạt",
+    "subType": "Loại thuê bao"
+  },
+  "violations": {
+    "title": "Vi phạm",
+    "description": "Quản lý vi phạm và xử lý",
+    "detectionDate": "Ngày phát hiện",
+    "violationType": "Loại vi phạm",
+    "severity": "Mức độ",
+    "resolve": "Đánh dấu đã xử lý"
+  },
+  "status": {
+    "active": "Hiệu lực",
+    "inactive": "Không hiệu lực",
+    "pending": "Chờ xử lý",
+    "approved": "Đã duyệt",
+    "rejected": "Từ chối",
+    "expired": "Hết hạn",
+    "expiring": "Sắp hết hạn",
+    "draft": "Nháp",
+    "investigating": "Đang điều tra",
+    "resolved": "Đã xử lý",
+    "new": "Mới",
+    "inUse": "Đang sử dụng",
+    "available": "Còn trống"
+  },
+  "severity": {
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "critical": "Nghiêm trọng"
+  }
+}

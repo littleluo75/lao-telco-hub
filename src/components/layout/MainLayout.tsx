@@ -1,28 +1,36 @@
-import { useState } from 'react';
-import { AppSidebar } from './AppSidebar';
-import { cn } from '@/lib/utils';
+import { Layout } from 'antd';
+import AppSidebar from './AppSidebar';
+import AppHeader from './AppHeader';
+import { useAppStore } from '@/stores/appStore';
+
+const { Content } = Layout;
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export default function MainLayout({ children }: MainLayoutProps) {
+  const { sidebarCollapsed } = useAppStore();
 
   return (
-    <div className="flex min-h-screen w-full">
-      <AppSidebar
-        isCollapsed={isCollapsed}
-        onToggle={() => setIsCollapsed(!isCollapsed)}
-      />
-      <main
-        className={cn(
-          'flex-1 transition-all duration-300',
-          isCollapsed ? 'ml-16' : 'ml-64'
-        )}
+    <Layout style={{ minHeight: '100vh' }}>
+      <AppSidebar />
+      <Layout
+        style={{
+          marginLeft: sidebarCollapsed ? 80 : 256,
+          transition: 'margin-left 0.2s',
+        }}
       >
-        {children}
-      </main>
-    </div>
+        <AppHeader />
+        <Content
+          style={{
+            margin: 24,
+            minHeight: 280,
+          }}
+        >
+          {children}
+        </Content>
+      </Layout>
+    </Layout>
   );
 }
