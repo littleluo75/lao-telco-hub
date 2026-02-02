@@ -138,6 +138,55 @@ export interface SystemLog {
   created_at: string;
 }
 
+// Role Management Types
+export type AppRole = 'admin' | 'director' | 'reviewer' | 'staff';
+export type PermissionAction = 'create' | 'read' | 'edit' | 'delete';
+export type PermissionScope = 'own' | 'any';
+
+export interface Role {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  status: Status;
+  created_at: string;
+}
+
+export interface Resource {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+}
+
+export interface RolePermission {
+  id: string;
+  role_id: string;
+  role?: Role;
+  resource: string;
+  action: PermissionAction;
+  scope: PermissionScope;
+}
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  user?: User;
+  role_id: string;
+  role?: Role;
+  created_at: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url?: string;
+  status: Status;
+  created_at: string;
+  roles?: Role[];
+}
+
 // Dashboard Stats
 export interface DashboardStats {
   totalActiveLicenses: number;

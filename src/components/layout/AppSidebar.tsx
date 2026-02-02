@@ -18,6 +18,7 @@ import {
   AppstoreOutlined,
   UserOutlined,
   HistoryOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useAppStore } from '@/stores/appStore';
 
@@ -56,6 +57,7 @@ export default function AppSidebar() {
     ]),
     getItem('Hệ thống', 'system', <SettingOutlined />, [
       getItem('Người dùng', '/users', <UserOutlined />),
+      getItem('Phân quyền', '/roles', <TeamOutlined />),
       getItem('Nhật ký', '/audit-logs', <HistoryOutlined />),
     ]),
   ];
@@ -66,7 +68,7 @@ export default function AppSidebar() {
     if (['/number-ranges', '/subscribers'].includes(path)) return ['resource-management'];
     if (['/violations', '/upload-data'].includes(path)) return ['compliance'];
     if (['/enterprises', '/license-types', '/service-types'].includes(path)) return ['master-data'];
-    if (['/users', '/audit-logs'].includes(path)) return ['system'];
+    if (['/users', '/roles', '/audit-logs'].includes(path)) return ['system'];
     return [];
   };
 

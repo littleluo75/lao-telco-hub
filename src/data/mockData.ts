@@ -13,6 +13,11 @@ import {
   SystemLog,
   DashboardStats,
   ChartData,
+  Role,
+  Resource,
+  RolePermission,
+  User,
+  UserRole,
 } from '@/types';
 
 // Enterprise Types
@@ -381,4 +386,103 @@ export const getEnterpriseById = (id: string): Enterprise | undefined => {
 // Helper function to get license type by ID
 export const getLicenseTypeById = (id: string): LicenseType | undefined => {
   return licenseTypes.find(lt => lt.id === id);
+};
+
+// ============ Role Management Mock Data ============
+
+// Roles
+export const roles: Role[] = [
+  { id: '1', name: 'Quản trị viên', code: 'admin', description: 'Toàn quyền quản lý hệ thống', status: 'ACTIVE', created_at: '2024-01-01' },
+  { id: '2', name: 'Giám đốc', code: 'director', description: 'Phê duyệt hồ sơ và quyết định', status: 'ACTIVE', created_at: '2024-01-01' },
+  { id: '3', name: 'Chuyên viên thẩm định', code: 'reviewer', description: 'Thẩm định và xem xét hồ sơ', status: 'ACTIVE', created_at: '2024-01-01' },
+  { id: '4', name: 'Nhân viên', code: 'staff', description: 'Nhập liệu và xử lý hồ sơ', status: 'ACTIVE', created_at: '2024-01-01' },
+];
+
+// Resources
+export const resources: Resource[] = [
+  { id: '1', name: 'Người dùng', code: 'user', description: 'Quản lý người dùng hệ thống' },
+  { id: '2', name: 'Vai trò', code: 'role', description: 'Quản lý vai trò và phân quyền' },
+  { id: '3', name: 'Hồ sơ đề nghị', code: 'application', description: 'Quản lý hồ sơ đề nghị cấp phép' },
+  { id: '4', name: 'Giấy phép', code: 'license', description: 'Quản lý giấy phép' },
+  { id: '5', name: 'Dải số', code: 'number_range', description: 'Quản lý dải số viễn thông' },
+  { id: '6', name: 'Thuê bao', code: 'subscriber', description: 'Tra cứu thông tin thuê bao' },
+  { id: '7', name: 'Vi phạm', code: 'violation', description: 'Quản lý vi phạm tuân thủ' },
+  { id: '8', name: 'Doanh nghiệp', code: 'enterprise', description: 'Quản lý thông tin doanh nghiệp' },
+];
+
+// Role Permissions
+export const rolePermissions: RolePermission[] = [
+  // Admin - full access
+  { id: '1', role_id: '1', resource: 'user', action: 'read', scope: 'any' },
+  { id: '2', role_id: '1', resource: 'user', action: 'create', scope: 'any' },
+  { id: '3', role_id: '1', resource: 'user', action: 'edit', scope: 'any' },
+  { id: '4', role_id: '1', resource: 'user', action: 'delete', scope: 'any' },
+  { id: '5', role_id: '1', resource: 'role', action: 'read', scope: 'any' },
+  { id: '6', role_id: '1', resource: 'role', action: 'create', scope: 'any' },
+  { id: '7', role_id: '1', resource: 'role', action: 'edit', scope: 'any' },
+  { id: '8', role_id: '1', resource: 'role', action: 'delete', scope: 'any' },
+  { id: '9', role_id: '1', resource: 'application', action: 'read', scope: 'any' },
+  { id: '10', role_id: '1', resource: 'application', action: 'create', scope: 'any' },
+  { id: '11', role_id: '1', resource: 'application', action: 'edit', scope: 'any' },
+  { id: '12', role_id: '1', resource: 'application', action: 'delete', scope: 'any' },
+  // Director - approve/reject
+  { id: '13', role_id: '2', resource: 'application', action: 'read', scope: 'any' },
+  { id: '14', role_id: '2', resource: 'application', action: 'edit', scope: 'any' },
+  { id: '15', role_id: '2', resource: 'license', action: 'read', scope: 'any' },
+  { id: '16', role_id: '2', resource: 'license', action: 'create', scope: 'any' },
+  { id: '17', role_id: '2', resource: 'user', action: 'read', scope: 'any' },
+  // Reviewer - review
+  { id: '18', role_id: '3', resource: 'application', action: 'read', scope: 'any' },
+  { id: '19', role_id: '3', resource: 'application', action: 'edit', scope: 'any' },
+  { id: '20', role_id: '3', resource: 'license', action: 'read', scope: 'any' },
+  { id: '21', role_id: '3', resource: 'violation', action: 'read', scope: 'any' },
+  { id: '22', role_id: '3', resource: 'violation', action: 'create', scope: 'any' },
+  // Staff - basic operations
+  { id: '23', role_id: '4', resource: 'application', action: 'read', scope: 'own' },
+  { id: '24', role_id: '4', resource: 'application', action: 'create', scope: 'own' },
+  { id: '25', role_id: '4', resource: 'application', action: 'edit', scope: 'own' },
+  { id: '26', role_id: '4', resource: 'subscriber', action: 'read', scope: 'any' },
+  { id: '27', role_id: '4', resource: 'enterprise', action: 'read', scope: 'any' },
+];
+
+// Users
+export const users: User[] = [
+  { id: '1', email: 'admin@ltra.gov.la', full_name: 'Nguyễn Văn Admin', status: 'ACTIVE', created_at: '2024-01-01' },
+  { id: '2', email: 'director@ltra.gov.la', full_name: 'Trần Thị Giám Đốc', status: 'ACTIVE', created_at: '2024-01-15' },
+  { id: '3', email: 'reviewer@ltra.gov.la', full_name: 'Lê Văn Thẩm Định', status: 'ACTIVE', created_at: '2024-02-01' },
+  { id: '4', email: 'staff1@ltra.gov.la', full_name: 'Phạm Thị Nhân Viên', status: 'ACTIVE', created_at: '2024-02-15' },
+  { id: '5', email: 'staff2@ltra.gov.la', full_name: 'Hoàng Văn Chuyên', status: 'INACTIVE', created_at: '2024-03-01' },
+];
+
+// User-Role assignments (many-to-many)
+export const userRoles: UserRole[] = [
+  { id: '1', user_id: '1', role_id: '1', created_at: '2024-01-01' },
+  { id: '2', user_id: '2', role_id: '2', created_at: '2024-01-15' },
+  { id: '3', user_id: '3', role_id: '3', created_at: '2024-02-01' },
+  { id: '4', user_id: '4', role_id: '4', created_at: '2024-02-15' },
+  { id: '5', user_id: '5', role_id: '4', created_at: '2024-03-01' },
+  { id: '6', user_id: '1', role_id: '2', created_at: '2024-01-01' }, // Admin also has Director role
+];
+
+// Helper functions for role management
+export const getRoleById = (id: string): Role | undefined => {
+  return roles.find(r => r.id === id);
+};
+
+export const getUserById = (id: string): User | undefined => {
+  return users.find(u => u.id === id);
+};
+
+export const getRolesForUser = (userId: string): Role[] => {
+  const roleIds = userRoles.filter(ur => ur.user_id === userId).map(ur => ur.role_id);
+  return roles.filter(r => roleIds.includes(r.id));
+};
+
+export const getUsersForRole = (roleId: string): User[] => {
+  const userIds = userRoles.filter(ur => ur.role_id === roleId).map(ur => ur.user_id);
+  return users.filter(u => userIds.includes(u.id));
+};
+
+export const getPermissionsForRole = (roleId: string): RolePermission[] => {
+  return rolePermissions.filter(rp => rp.role_id === roleId);
 };
