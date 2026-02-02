@@ -16,6 +16,7 @@ import LicenseTypes from './pages/LicenseTypes';
 import ServiceTypes from './pages/ServiceTypes';
 import Users from './pages/Users';
 import AuditLogs from './pages/AuditLogs';
+import RoleAssignment from './pages/RoleAssignment';
 import NotFound from './pages/NotFound';
 import './i18n';
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/license-types" element={<LicenseTypes />} />
               <Route path="/service-types" element={<ServiceTypes />} />
               <Route path="/users" element={<Users />} />
+              <Route path="/roles" element={<RoleAssignment />} />
               <Route path="/audit-logs" element={<AuditLogs />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
