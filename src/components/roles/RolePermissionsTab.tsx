@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Table, Tag, Button, Select, Space, Modal, Popconfirm, Card } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
+import { Select, Space, Card, Checkbox, Tag, Tooltip, Spin } from 'antd';
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import {
   useRoles,
   useResources,
@@ -9,18 +8,18 @@ import {
   useCreateRolePermission,
   useDeleteRolePermission,
 } from '@/hooks/useRoleData';
-import type { RolePermission, PermissionAction, PermissionScope } from '@/types';
+import type { PermissionAction, PermissionScope } from '@/types';
 
-const ACTION_OPTIONS: { value: PermissionAction; label: string; color: string }[] = [
+const ACTIONS: { value: PermissionAction; label: string; color: string }[] = [
   { value: 'create', label: 'Tạo mới', color: 'green' },
   { value: 'read', label: 'Xem', color: 'blue' },
   { value: 'edit', label: 'Sửa', color: 'orange' },
   { value: 'delete', label: 'Xóa', color: 'red' },
 ];
 
-const SCOPE_OPTIONS: { value: PermissionScope; label: string; color: string }[] = [
-  { value: 'own', label: 'Của mình', color: 'cyan' },
-  { value: 'any', label: 'Tất cả', color: 'purple' },
+const SCOPES: { value: PermissionScope; label: string }[] = [
+  { value: 'own', label: 'Của mình' },
+  { value: 'any', label: 'Tất cả' },
 ];
 
 export default function RolePermissionsTab() {
@@ -30,49 +29,43 @@ export default function RolePermissionsTab() {
   const createPermission = useCreateRolePermission();
   const deletePermission = useDeleteRolePermission();
 
-  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newPermission, setNewPermission] = useState<{
-    role_id: string;
-    resource: string;
-    action: PermissionAction;
-    scope: PermissionScope;
-  }>({
-    role_id: '',
-    resource: '',
-    action: 'read',
-    scope: 'own',
-  });
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedScope, setSelectedScope] = useState<PermissionScope>('any');
 
-  const filteredPermissions = useMemo(() => {
-    if (!selectedRoleFilter) return permissions;
-    return permissions.filter((p) => p.role_id === selectedRoleFilter);
-  }, [permissions, selectedRoleFilter]);
+  // Get permission for a specific resource and action
+  const getPermission = (resourceCode: string, action: PermissionAction) => {
+    if (!selectedRole) return null;
+    return permissions.find(
+      (p) => p.role_id === selectedRole && p.resource === resourceCode && p.action === action
+    );
+  };
 
-  const handleCreatePermission = () => {
-    if (newPermission.role_id && newPermission.resource) {
-      createPermission.mutate(newPermission, {
-        onSuccess: () => {
-          setIsModalOpen(false);
-          setNewPermission({ role_id: '', resource: '', action: 'read', scope: 'own' });
-        },
+  const hasPermission = (resourceCode: string, action: PermissionAction) => {
+    return !!getPermission(resourceCode, action);
+  };
+
+  const getPermissionScope = (resourceCode: string, action: PermissionAction): PermissionScope | null => {
+    const perm = getPermission(resourceCode, action);
+    return perm?.scope || null;
+  };
+
+  const handleTogglePermission = async (resourceCode: string, action: PermissionAction) => {
+    if (!selectedRole) return;
+
+    const existingPerm = getPermission(resourceCode, action);
+
+    if (existingPerm) {
+      // Remove permission
+      deletePermission.mutate(existingPerm.id);
+    } else {
+      // Add permission
+      createPermission.mutate({
+        role_id: selectedRole,
+        resource: resourceCode,
+        action,
+        scope: selectedScope,
       });
     }
-  };
-
-  const getActionTag = (action: PermissionAction) => {
-    const option = ACTION_OPTIONS.find((a) => a.value === action);
-    return <Tag color={option?.color}>{option?.label}</Tag>;
-  };
-
-  const getScopeTag = (scope: PermissionScope) => {
-    const option = SCOPE_OPTIONS.find((s) => s.value === scope);
-    return <Tag color={option?.color}>{option?.label}</Tag>;
-  };
-
-  const getResourceName = (code: string) => {
-    const resource = resources.find((r) => r.code === code);
-    return resource?.name || code;
   };
 
   const getRoleColor = (code: string) => {
@@ -85,151 +78,130 @@ export default function RolePermissionsTab() {
     return colors[code] || 'default';
   };
 
-  const columns: ColumnsType<RolePermission> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60,
-    },
-    {
-      title: 'Vai trò',
-      key: 'role',
-      width: 160,
-      render: (_, record) => {
-        const role = record.role;
-        return role ? (
-          <Tag color={getRoleColor(role.code)}>{role.name}</Tag>
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        );
-      },
-    },
-    {
-      title: 'Tài nguyên',
-      dataIndex: 'resource',
-      key: 'resource',
-      render: (resource: string) => (
-        <span className="font-medium">{getResourceName(resource)}</span>
-      ),
-    },
-    {
-      title: 'Hành động',
-      dataIndex: 'action',
-      key: 'action',
-      width: 120,
-      render: (action: PermissionAction) => getActionTag(action),
-    },
-    {
-      title: 'Phạm vi',
-      dataIndex: 'scope',
-      key: 'scope',
-      width: 120,
-      render: (scope: PermissionScope) => getScopeTag(scope),
-    },
-    {
-      title: 'Thao tác',
-      key: 'actions',
-      width: 100,
-      render: (_, record) => (
-        <Popconfirm
-          title="Xác nhận xóa quyền?"
-          description="Bạn có chắc chắn muốn xóa quyền này?"
-          okText="Xóa"
-          cancelText="Hủy"
-          onConfirm={() => deletePermission.mutate(record.id)}
-        >
-          <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-        </Popconfirm>
-      ),
-    },
-  ];
+  const selectedRoleData = roles.find((r) => r.id === selectedRole);
+  const isLoading = loadingRoles || loadingResources || loadingPermissions;
+  const isMutating = createPermission.isPending || deletePermission.isPending;
 
   return (
-    <>
-      <div className="mb-4 flex justify-between items-center">
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center">
         <Space>
-          <span className="text-sm font-medium">Lọc theo vai trò:</span>
+          <span className="text-sm font-medium">Vai trò:</span>
           <Select
-            allowClear
-            placeholder="Tất cả vai trò"
-            style={{ width: 200 }}
-            value={selectedRoleFilter}
-            onChange={setSelectedRoleFilter}
+            placeholder="Chọn vai trò để phân quyền"
+            style={{ width: 240 }}
+            value={selectedRole}
+            onChange={setSelectedRole}
             loading={loadingRoles}
             options={roles.map((r) => ({ value: r.id, label: r.name }))}
           />
         </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)}>
-          Thêm quyền
-        </Button>
+        <Space>
+          <span className="text-sm font-medium">Phạm vi mặc định:</span>
+          <Select
+            style={{ width: 140 }}
+            value={selectedScope}
+            onChange={setSelectedScope}
+            options={SCOPES.map((s) => ({ value: s.value, label: s.label }))}
+          />
+        </Space>
+        {selectedRoleData && (
+          <Tag color={getRoleColor(selectedRoleData.code)} className="ml-2">
+            {selectedRoleData.name}
+          </Tag>
+        )}
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={filteredPermissions}
-        rowKey="id"
-        loading={loadingPermissions}
-        pagination={{ pageSize: 10 }}
-        size="middle"
-      />
+      {/* Permission Matrix */}
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Spin size="large" />
+        </div>
+      ) : !selectedRole ? (
+        <Card className="text-center py-12">
+          <p className="text-muted-foreground">Vui lòng chọn vai trò để xem và chỉnh sửa ma trận phân quyền</p>
+        </Card>
+      ) : (
+        <Card className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left p-3 font-semibold min-w-[200px]">Tài nguyên</th>
+                {ACTIONS.map((action) => (
+                  <th key={action.value} className="text-center p-3 font-semibold min-w-[100px]">
+                    <Tag color={action.color}>{action.label}</Tag>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {resources.map((resource) => (
+                <tr key={resource.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                  <td className="p-3">
+                    <div>
+                      <div className="font-medium">{resource.name}</div>
+                      <div className="text-xs text-muted-foreground">{resource.code}</div>
+                    </div>
+                  </td>
+                  {ACTIONS.map((action) => {
+                    const hasPerm = hasPermission(resource.code, action.value);
+                    const scope = getPermissionScope(resource.code, action.value);
+                    
+                    return (
+                      <td key={action.value} className="text-center p-3">
+                        <Tooltip
+                          title={
+                            hasPerm
+                              ? `${action.label}: ${scope === 'any' ? 'Tất cả' : 'Của mình'} - Click để xóa`
+                              : `Click để thêm quyền ${action.label}`
+                          }
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            <Checkbox
+                              checked={hasPerm}
+                              onChange={() => handleTogglePermission(resource.code, action.value)}
+                              disabled={isMutating}
+                            />
+                            {hasPerm && (
+                              <span className="text-xs text-muted-foreground">
+                                {scope === 'any' ? 'Tất cả' : 'Của mình'}
+                              </span>
+                            )}
+                          </div>
+                        </Tooltip>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
 
-      <Modal
-        title="Thêm quyền mới"
-        open={isModalOpen}
-        onOk={handleCreatePermission}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setNewPermission({ role_id: '', resource: '', action: 'read', scope: 'own' });
-        }}
-        okText="Thêm quyền"
-        cancelText="Hủy"
-        confirmLoading={createPermission.isPending}
-        okButtonProps={{ disabled: !newPermission.role_id || !newPermission.resource }}
-      >
-        <div className="py-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Vai trò</label>
-            <Select
-              className="w-full"
-              placeholder="Chọn vai trò"
-              value={newPermission.role_id || undefined}
-              onChange={(value) => setNewPermission({ ...newPermission, role_id: value })}
-              loading={loadingRoles}
-              options={roles.map((r) => ({ value: r.id, label: r.name }))}
-            />
+      {/* Legend */}
+      <Card size="small" className="bg-muted/30">
+        <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <Checkbox checked disabled />
+            <span>Có quyền</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Tài nguyên</label>
-            <Select
-              className="w-full"
-              placeholder="Chọn tài nguyên"
-              value={newPermission.resource || undefined}
-              onChange={(value) => setNewPermission({ ...newPermission, resource: value })}
-              loading={loadingResources}
-              options={resources.map((r) => ({ value: r.code, label: r.name }))}
-            />
+          <div className="flex items-center gap-2">
+            <Checkbox disabled />
+            <span>Không có quyền</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Hành động</label>
-            <Select
-              className="w-full"
-              value={newPermission.action}
-              onChange={(value) => setNewPermission({ ...newPermission, action: value })}
-              options={ACTION_OPTIONS.map((a) => ({ value: a.value, label: a.label }))}
-            />
+          <div className="border-l border-border pl-6 flex items-center gap-2">
+            <span className="font-medium">Phạm vi:</span>
+            <Tag>Của mình</Tag>
+            <span>- Chỉ dữ liệu do mình tạo</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Phạm vi</label>
-            <Select
-              className="w-full"
-              value={newPermission.scope}
-              onChange={(value) => setNewPermission({ ...newPermission, scope: value })}
-              options={SCOPE_OPTIONS.map((s) => ({ value: s.value, label: s.label }))}
-            />
+          <div className="flex items-center gap-2">
+            <Tag color="purple">Tất cả</Tag>
+            <span>- Toàn bộ dữ liệu</span>
           </div>
         </div>
-      </Modal>
-    </>
+      </Card>
+    </div>
   );
 }
